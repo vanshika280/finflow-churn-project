@@ -1,0 +1,828 @@
+FinFlow Churn Prediction and Retention Prioritization
+Role-Based Viva Context
+
+Purpose of this document:
+This file explains the art, responsibilities, reasoning, and expected viva-level understanding for each role in the FinFlow churn project:
+
+1. ML Engineer
+2. Data Analyst
+3. Business Analyst
+4. Presenter
+5. Code Reviewer
+
+The explanation starts from basic fundamentals and then moves toward deeper questions that can come up in a viva or assessment discussion.
+
+Project summary:
+FinFlow is a neobank with 2 million users and quarterly customer churn. The project uses a 1000-record synthetic customer dataset to predict churn probability, estimate customer value, and produce a prioritized retention list. The key idea is to not only predict who may churn, but also identify which customers are most valuable to save first.
+
+Dataset columns:
+- Customer_ID
+- Age
+- Account_Age_Months
+- Avg_Monthly_Transactions
+- Last_Login_Days_Ago
+- Support_Tickets
+- Feature_Usage_Score
+- Avg_Monthly_Revenue
+- Churned
+
+Target:
+- Churned = 0 means customer did not churn.
+- Churned = 1 means customer churned.
+
+Models used:
+- Decision Tree Classifier
+- Gradient Boosting Classifier
+
+Best selected model:
+- Gradient Boosting
+
+Best model metrics:
+- Accuracy: 0.8950
+- Precision: 0.7143
+- Recall: 0.6944
+- F1-score: 0.7042
+- ROC-AUC: 0.9443
+
+Important business outputs:
+- Churn probability for every customer.
+- Risk level: Low, Medium, High.
+- CLV calculation.
+- Priority score = Churn_Probability x CLV.
+- Top-20 save list.
+- Retention strategy proposal.
+
+
+ROLE 1: ML ENGINEER
+
+The art of the ML Engineer in this project:
+The ML Engineer turns raw customer behavior data into a reliable predictive system. Their job is not only to train a model, but to make sure the model is trained correctly, evaluated fairly, and converted into useful outputs such as churn probabilities and feature importance.
+
+Basic responsibilities:
+- Prepare model features.
+- Exclude non-predictive identifiers such as Customer_ID.
+- Use Churned only as the target variable.
+- Split the dataset into train and test sets.
+- Train the required models from scratch.
+- Evaluate model performance using suitable metrics.
+- Select the best model.
+- Save the model and metadata.
+- Generate churn probability scores for all customers.
+
+Fundamental concept: What is churn prediction?
+Churn prediction is a binary classification problem. The model learns patterns from historical customers and predicts whether a customer belongs to class 0 or class 1.
+
+Class 0:
+The customer did not churn.
+
+Class 1:
+The customer churned.
+
+In this project, the output is not only a class label. The more useful output is churn probability. For example, a customer with probability 0.82 is more urgent than a customer with probability 0.41.
+
+Why Customer_ID is not used as a feature:
+Customer_ID is only an identifier. It does not contain behavioral meaning. If we include it, the model may learn meaningless patterns from ID ordering. This can create noise or false patterns. A model should learn from features like login activity, transaction frequency, support tickets, and feature usage.
+
+Why Churned is not used as a feature:
+Churned is the answer we are trying to predict. If we include it as an input feature, it causes target leakage. The model would appear extremely accurate, but only because it was given the answer during training.
+
+Feature preparation:
+The ML Engineer used numeric customer behavior features:
+- Age
+- Account_Age_Months
+- Avg_Monthly_Transactions
+- Last_Login_Days_Ago
+- Support_Tickets
+- Feature_Usage_Score
+- Avg_Monthly_Revenue
+
+Missing values:
+Missing values can break many ML algorithms. In this project, numeric missing values are handled using median imputation. Median is useful because it is less affected by outliers than mean.
+
+Train-test split:
+The data is split into training and testing portions:
+- 80% training
+- 20% testing
+
+The training set is used to teach the model.
+The testing set is used to evaluate how the model performs on unseen data.
+
+Why random_state=42:
+Random splitting can produce slightly different results each time. random_state=42 makes the split reproducible. This means the same code gives the same result during demo, review, and viva.
+
+Why stratify=y:
+Churn data is usually imbalanced. If the split is random without stratification, one set may get too many churned or non-churned customers. Stratification preserves the class ratio in both train and test sets.
+
+Decision Tree Classifier:
+A Decision Tree splits the data using rules. For example:
+- If Last_Login_Days_Ago > 60, churn risk may increase.
+- If Support_Tickets > 5, churn risk may increase.
+
+Why Decision Tree is useful:
+- Easy to explain.
+- Good baseline model.
+- Gives feature importance.
+- Business stakeholders can understand decision rules.
+
+Hyperparameters used:
+DecisionTreeClassifier(
+    max_depth=4,
+    min_samples_leaf=20,
+    class_weight="balanced",
+    random_state=42
+)
+
+max_depth=4:
+Limits how deep the tree can grow. This reduces overfitting and keeps the model interpretable.
+
+min_samples_leaf=20:
+Each final leaf must have at least 20 samples. This avoids rules that are based on very few customers.
+
+class_weight="balanced":
+Gives more importance to the minority class, which is usually churned customers. This helps the model pay attention to churn cases.
+
+Gradient Boosting Classifier:
+Gradient Boosting builds many weak decision trees one after another. Each new tree tries to correct the mistakes of the previous trees.
+
+Why Gradient Boosting is useful:
+- Captures non-linear relationships.
+- Usually performs better than a single tree.
+- Works well on tabular data.
+- Still gives feature importance.
+
+Hyperparameters used:
+GradientBoostingClassifier(
+    n_estimators=100,
+    learning_rate=0.1,
+    max_depth=3,
+    random_state=42
+)
+
+n_estimators=100:
+The model builds 100 trees.
+
+learning_rate=0.1:
+Controls how strongly each tree contributes. Smaller learning rates make learning more gradual.
+
+max_depth=3:
+Each tree is shallow. Shallow trees reduce overfitting and help generalization.
+
+Evaluation metrics:
+Accuracy:
+Percentage of total correct predictions.
+
+Precision:
+Out of customers predicted as churned, how many actually churned.
+High precision means fewer false alarms.
+
+Recall:
+Out of actual churned customers, how many were detected.
+High recall means fewer missed churners.
+
+F1-score:
+Harmonic mean of precision and recall. Useful when we need balance.
+
+ROC-AUC:
+Measures how well the model separates churners from non-churners across thresholds.
+
+Confusion matrix:
+Shows:
+- True negatives
+- False positives
+- False negatives
+- True positives
+
+Why accuracy alone is not enough:
+Suppose only 8% of customers churn. A model that predicts "no churn" for everyone can get 92% accuracy but is useless. That is why recall, F1-score, and ROC-AUC are more meaningful in churn problems.
+
+Model selection:
+Gradient Boosting was selected because it had the stronger F1-score and ROC-AUC:
+- F1-score: 0.7042
+- ROC-AUC: 0.9443
+
+Feature importance:
+Feature importance explains which variables contributed most to model decisions.
+
+Top drivers:
+- Last_Login_Days_Ago
+- Avg_Monthly_Transactions
+- Support_Tickets
+
+Interpretation:
+Customers who have not logged in recently, transact less, or raise more support tickets are more likely to churn.
+
+Possible viva questions for ML Engineer:
+
+Question: Why did you use two models?
+Answer: The Decision Tree provides an interpretable baseline. Gradient Boosting provides stronger predictive power by combining many small trees. Comparing both helps us choose a model based on evidence, not assumption.
+
+Question: Why did Gradient Boosting perform better?
+Answer: Churn behavior can be non-linear. For example, inactivity may be risky only when combined with low transaction activity or high support tickets. Gradient Boosting captures such interactions better than a single tree.
+
+Question: What is overfitting?
+Answer: Overfitting happens when a model learns the training data too closely, including noise. It performs well on training data but poorly on new data.
+
+Question: How did you reduce overfitting?
+Answer: We limited tree depth, used min_samples_leaf in Decision Tree, used shallow trees in Gradient Boosting, and evaluated on a separate test set.
+
+Question: What is target leakage?
+Answer: Target leakage happens when information that would not be available at prediction time is included as a feature. Including Churned as an input would be leakage.
+
+Question: Why predict probability instead of only class?
+Answer: Probability supports prioritization. A customer with 0.90 churn probability should be handled before a customer with 0.52, especially if CLV is high.
+
+Question: What threshold did you use?
+Answer: For predicted churn, the default threshold is 0.5. For business risk levels, we used Low below 0.35, Medium from 0.35 to 0.65, and High above 0.65.
+
+Question: Can the threshold be changed?
+Answer: Yes. If FinFlow wants to catch more churners, it can lower the threshold to increase recall. If it wants fewer false positives, it can raise the threshold to increase precision.
+
+Question: What would you improve with more time?
+Answer: Hyperparameter tuning, cross-validation, calibration of probabilities, cost-sensitive learning, campaign response tracking, and model monitoring after deployment.
+
+
+ROLE 2: DATA ANALYST
+
+The art of the Data Analyst in this project:
+The Data Analyst discovers what the dataset is saying before modeling. Their role is to validate the data, summarize patterns, create visual evidence, and translate numbers into business observations.
+
+Basic responsibilities:
+- Load and inspect the dataset.
+- Check shape and columns.
+- Check missing values.
+- Check data types.
+- Analyze class distribution.
+- Calculate churn rate.
+- Generate descriptive statistics.
+- Compare churned and non-churned customers.
+- Create charts for feature distributions.
+- Write EDA observations.
+
+Fundamental concept: What is EDA?
+EDA means Exploratory Data Analysis. It is the process of understanding the dataset before building a model.
+
+EDA answers:
+- How many rows and columns are present?
+- Are there missing values?
+- Is the target balanced or imbalanced?
+- What is the range of each feature?
+- Which features look different between churned and non-churned customers?
+- Are there possible outliers?
+- Are there suspicious values?
+
+Dataset shape:
+The dataset has 1000 records and 9 columns after column normalization.
+
+Column normalization:
+The original file had:
+- Support_Tickets_Last_6M
+- Avg_Monthly_Revenue_INR
+
+The project maps them to:
+- Support_Tickets
+- Avg_Monthly_Revenue
+
+Why this matters:
+Real datasets often have slightly different column names. A robust project should handle reasonable variations without failing.
+
+Missing value check:
+Missing values must be checked before modeling because missing data can affect statistics, charts, and model training.
+
+Class distribution:
+The dataset has:
+- 820 non-churned customers
+- 180 churned customers
+
+Churn rate:
+180 / 1000 = 18%
+
+Why class distribution matters:
+If the target is imbalanced, accuracy can be misleading. A data analyst must warn the ML engineer and business team that recall and F1-score are important.
+
+Basic statistics:
+The analyst looks at:
+- Mean
+- Standard deviation
+- Minimum
+- Maximum
+- Median
+- Quartiles
+
+These help understand typical customer behavior.
+
+Churn vs non-churn comparison:
+The analyst compares average values by target class.
+
+Important observations from this dataset:
+- Churned customers had higher Last_Login_Days_Ago.
+- Churned customers had lower Avg_Monthly_Transactions.
+- Churned customers had more Support_Tickets.
+- Churned customers had lower Feature_Usage_Score.
+
+Business interpretation:
+Higher Last_Login_Days_Ago:
+Customers who have not logged in recently are disengaged.
+
+Lower Avg_Monthly_Transactions:
+Customers who transact less may no longer use FinFlow as their primary bank.
+
+Higher Support_Tickets:
+More support tickets may indicate friction, dissatisfaction, or unresolved issues.
+
+Lower Feature_Usage_Score:
+Customers who do not use many features may not see enough value in the product.
+
+Charts created:
+- Class distribution chart
+- Distribution plots for each feature
+- Boxplots comparing churned vs non-churned customers
+- Correlation heatmap
+- Feature importance chart
+
+Why histograms are used:
+Histograms show how values are distributed. They help compare churned and non-churned customer behavior.
+
+Why boxplots are used:
+Boxplots show median, spread, and outliers. They are useful for comparing numeric features across churn classes.
+
+Why correlation heatmap is used:
+It shows relationships between numeric variables. It can reveal whether features move together.
+
+Potential data quality checks:
+- Are ages realistic?
+- Are negative transaction counts present?
+- Are support tickets within expected range?
+- Is revenue non-negative?
+- Are churn labels only 0 or 1?
+- Are duplicate Customer_IDs present?
+
+Possible viva questions for Data Analyst:
+
+Question: Why is EDA important before modeling?
+Answer: EDA helps detect data issues, understand target distribution, identify useful patterns, and guide feature selection.
+
+Question: What did the EDA reveal?
+Answer: Inactivity, low transactions, high support tickets, and low feature usage were associated with churn.
+
+Question: What does churn rate mean?
+Answer: Churn rate is the percentage of customers who left. In this dataset, it is 18%.
+
+Question: What if the dataset has missing values?
+Answer: We report them first. For numeric model features, we can impute missing values using median. For business reporting, we should also mention the missing rate.
+
+Question: What if one feature has outliers?
+Answer: We inspect it with boxplots and summary statistics. Depending on severity, we may cap, transform, or leave it if tree models can handle it.
+
+Question: Why use visualizations?
+Answer: Charts make patterns easier to understand and help business stakeholders trust the analysis.
+
+Question: What is the difference between correlation and causation?
+Answer: Correlation means two variables move together. Causation means one directly causes the other. EDA can suggest relationships but does not prove causation.
+
+
+ROLE 3: BUSINESS ANALYST
+
+The art of the Business Analyst in this project:
+The Business Analyst converts model output into business action. They make sure the solution is not just technically correct but financially and operationally useful.
+
+Basic responsibilities:
+- Understand FinFlow's churn problem.
+- Define why churn matters financially.
+- Convert churn probabilities into customer risk levels.
+- Define CLV logic.
+- Define priority score.
+- Create customer segments.
+- Design retention strategies.
+- Explain expected business value.
+
+Business problem:
+FinFlow is losing customers every quarter. For a neobank, churn can reduce:
+- Deposits
+- Monthly transactions
+- Card usage
+- Fee income
+- Cross-sell potential
+- Long-term customer relationship value
+
+Why prediction alone is not enough:
+A churn model can say who is likely to leave. But the business also needs to know who is worth saving first.
+
+Example:
+Customer A:
+- Churn probability = 0.90
+- CLV = INR 500
+
+Customer B:
+- Churn probability = 0.80
+- CLV = INR 5000
+
+Customer B may be a better campaign priority even though Customer A has slightly higher churn probability.
+
+Risk levels:
+- Low Risk: Churn_Probability < 0.35
+- Medium Risk: 0.35 to 0.65
+- High Risk: > 0.65
+
+Why risk levels are useful:
+Marketing and support teams may not use raw probabilities every day. Risk labels make the output easier to act on.
+
+CLV formula:
+CLV = Avg_Monthly_Revenue x Expected_Months
+
+Expected months:
+Expected_Months = max(1, 12 - Last_Login_Days_Ago / 30)
+
+Business logic behind Expected_Months:
+Recently active customers are expected to remain longer. Customers inactive for many days are expected to have shorter remaining lifetime. The max(1, ...) prevents CLV from becoming zero or negative.
+
+Why this is a simple CLV:
+This is a practical assessment-level CLV. A production CLV model may include:
+- Gross margin
+- Discount rate
+- Product holding
+- Future revenue prediction
+- Campaign cost
+- Retention probability
+- Customer acquisition cost
+
+Priority score:
+Priority_Score = Churn_Probability x CLV
+
+Meaning:
+Priority score is expected value at risk. A high score means the customer is both likely to churn and valuable.
+
+Customer segments:
+High Priority:
+Churn_Probability >= 0.65 and CLV in top 33%.
+
+Medium Priority:
+Churn_Probability >= 0.35 and not High Priority.
+
+Low Priority:
+All others.
+
+Why top 33% CLV:
+This creates a practical high-value group. It prevents the campaign from spending too much on low-value customers.
+
+Current segment results:
+- High Priority: 32 customers
+- Medium Priority: 158 customers
+- Low Priority: 810 customers
+
+Top-20 save list:
+The top-20 list is sorted by Priority_Score descending.
+
+Top-20 CLV:
+INR 79,410.05
+
+Why top-20 matters:
+It gives the marketing team a manageable first campaign list. Instead of looking at all customers, they can start with the highest expected value at risk.
+
+Retention strategy 1:
+High-value inactive customer reactivation.
+
+Actions:
+- Personalized in-app message.
+- Email and push notifications.
+- Cashback on next transaction.
+- Reminder about bill pay, savings pockets, budgeting, card controls.
+- Track login and transaction after campaign.
+
+Business logic:
+Inactive high-value customers may still be recoverable. A transaction-linked incentive can restart the usage habit.
+
+Retention strategy 2:
+Service recovery for friction-heavy customers.
+
+Actions:
+- Priority callback.
+- Faster complaint resolution.
+- Fee waiver where appropriate.
+- Relationship manager outreach.
+- Post-resolution satisfaction check.
+
+Business logic:
+High support tickets indicate friction. Fast service recovery can protect trust and prevent account closure.
+
+Possible viva questions for Business Analyst:
+
+Question: Why did you multiply churn probability by CLV?
+Answer: This estimates the value at risk. It prioritizes customers who are both likely to churn and financially valuable.
+
+Question: Why not target all high-risk customers?
+Answer: Campaign budgets and support capacity are limited. Prioritization helps allocate resources where the expected business impact is highest.
+
+Question: Why use Avg_Monthly_Revenue for CLV?
+Answer: Revenue is a direct measure of customer value. Multiplying it by expected months gives a simple estimate of future value.
+
+Question: What if revenue is not available?
+Answer: Use Avg_Monthly_Transactions as a proxy, but clearly state that true CLV needs revenue or margin data.
+
+Question: How would you measure campaign success?
+Answer: Compare treated and control groups. Track retention after 30/60/90 days, login activity, transaction activity, feature usage, and revenue retained.
+
+Question: What is the business risk of false positives?
+Answer: False positives are customers predicted to churn but who would not churn. They may receive unnecessary incentives, increasing campaign cost.
+
+Question: What is the business risk of false negatives?
+Answer: False negatives are actual churners missed by the model. The business loses customers it could have saved.
+
+Question: Which is worse in churn?
+Answer: Usually false negatives are more costly because missed churners leave. But if retention incentives are expensive, false positives also matter.
+
+
+ROLE 4: PRESENTER
+
+The art of the Presenter in this project:
+The Presenter turns technical work into a clear story. Their role is to connect the business problem, data, model, and final recommendations in a way that a mixed audience can understand.
+
+Basic responsibilities:
+- Build the story flow.
+- Keep slides concise.
+- Explain technical terms in simple language.
+- Highlight the most important numbers.
+- Show charts clearly.
+- Demonstrate the dashboard.
+- Manage time.
+- Answer viva questions confidently.
+
+Presentation structure:
+The project uses a 10-slide flow:
+- 2 greeting/intro slides
+- 8 content slides
+
+Suggested 10 slides:
+1. Title and greeting.
+2. Agenda.
+3. Business problem.
+4. Dataset overview.
+5. EDA insights.
+6. Modeling approach.
+7. Model results.
+8. Churn drivers and scoring.
+9. CLV and prioritization.
+10. Top-20 save list, strategies, and closing.
+
+How to explain the project in one sentence:
+We built a churn prediction model for FinFlow, converted model probabilities into customer risk levels, combined them with CLV, and created a prioritized save list for retention campaigns.
+
+How to explain the business problem:
+FinFlow has many users, but customers leaving every quarter create financial loss. The business needs an early warning system and a practical way to decide which customers should receive retention attention first.
+
+How to explain the dataset:
+The dataset contains customer behavior variables such as transactions, inactivity, support tickets, feature usage, revenue, and churn label.
+
+How to explain the model:
+We trained two models from scratch: Decision Tree and Gradient Boosting. Gradient Boosting performed better based on F1-score and ROC-AUC, so it was selected.
+
+How to explain metrics simply:
+Accuracy:
+How often the model is correct overall.
+
+Precision:
+When the model says churn, how often it is right.
+
+Recall:
+How many actual churners the model catches.
+
+F1-score:
+A balance between precision and recall.
+
+ROC-AUC:
+How well the model separates churners from non-churners.
+
+How to explain why accuracy is not enough:
+In churn, the churned group can be smaller. A model can look accurate by predicting most customers as non-churned, but that does not solve the business problem. That is why recall, F1-score, and ROC-AUC matter.
+
+How to explain EDA insights:
+The data showed that churned customers were more inactive, had lower transaction activity, raised more support tickets, and had lower feature usage. These are logical signs of disengagement or dissatisfaction.
+
+How to explain CLV:
+CLV estimates how much future value a customer may bring. We used monthly revenue multiplied by expected remaining months.
+
+How to explain priority score:
+Priority score combines risk and value:
+Priority_Score = Churn_Probability x CLV
+
+This means FinFlow should first target customers who are both likely to churn and valuable.
+
+How to demo the dashboard:
+1. Open the frontend dashboard.
+2. Show KPI cards.
+3. Show risk distribution.
+4. Show feature importance.
+5. Show CLV vs churn risk.
+6. Show top-20 save list.
+7. Search for a customer ID.
+8. End with retention strategies.
+
+Good presentation habits:
+- Do not read every bullet.
+- Explain the idea behind each slide.
+- Use numbers only when they support the story.
+- Keep a calm pace.
+- Mention limitations honestly.
+- End with clear business recommendations.
+
+Possible viva questions for Presenter:
+
+Question: Can you summarize the project in 30 seconds?
+Answer: We built a churn prediction and retention prioritization system for FinFlow. We trained Decision Tree and Gradient Boosting models from scratch, selected Gradient Boosting, scored all customers by churn probability, calculated CLV, and created a top-20 save list for targeted retention campaigns.
+
+Question: What is the main business value?
+Answer: It helps FinFlow act before customers leave and focus retention spend on the highest-value at-risk customers.
+
+Question: What is the strongest churn signal?
+Answer: Last_Login_Days_Ago was the strongest driver, followed by transaction activity and support tickets.
+
+Question: What would you show in a demo?
+Answer: I would show KPI cards, risk distribution, feature importance, priority segments, and the searchable top-20 save list.
+
+Question: What are the limitations?
+Answer: The dataset is synthetic and small. The CLV formula is simplified. The model should be validated on real historical data before production use.
+
+
+ROLE 5: CODE REVIEWER
+
+The art of the Code Reviewer in this project:
+The Code Reviewer protects project quality. Their role is to make sure the code is correct, clean, reproducible, understandable, and aligned with requirements.
+
+Basic responsibilities:
+- Check project structure.
+- Verify all required files exist.
+- Check that the code runs end-to-end.
+- Ensure no forbidden tools are used.
+- Review data leakage risks.
+- Review column mapping and validation.
+- Check output files are generated.
+- Check README instructions.
+- Verify beginner-friendly code.
+
+Project structure:
+finflow-churn-project/
+  dataset.csv
+  requirements.txt
+  README.md
+  src/
+    train_model.py
+    eda.py
+    prioritize_customers.py
+    utils.py
+  models/
+    churn_model.pkl
+    model_metadata.json
+  outputs/
+    churn_probability_scores.csv
+    prioritized_customer_segments.csv
+    top_20_save_list.csv
+    feature_importance.csv
+    retention_strategy_proposal.md
+    charts/
+  frontend/
+    index.html
+    styles.css
+    app.js
+
+Code responsibility split:
+utils.py:
+Shared constants, column normalization, validation, risk-level logic, CLV logic, priority segment logic, retention reason logic.
+
+eda.py:
+Loads dataset, performs EDA, saves charts, prints observations.
+
+train_model.py:
+Prepares features, trains Decision Tree and Gradient Boosting, evaluates models, saves best model and churn probabilities.
+
+prioritize_customers.py:
+Loads churn scores, calculates CLV, priority score, segments, top-20 save list, and strategy proposal.
+
+frontend:
+Custom HTML/CSS/JavaScript dashboard. Not Streamlit.
+
+Requirements file:
+- pandas
+- numpy
+- scikit-learn
+- matplotlib
+- seaborn
+- joblib
+
+Important review checks:
+
+Check 1: No pre-trained models.
+The code uses only scikit-learn models trained on dataset.csv.
+
+Check 2: No external ML APIs.
+No API calls are made for model training or prediction.
+
+Check 3: No AutoML.
+The models are explicitly defined and trained manually.
+
+Check 4: Customer_ID not used as feature.
+Customer_ID is used only in output tables.
+
+Check 5: Churned not used as feature.
+Churned is only used as target.
+
+Check 6: Column mapping works.
+Support_Tickets_Last_6M maps to Support_Tickets.
+Avg_Monthly_Revenue_INR maps to Avg_Monthly_Revenue.
+
+Check 7: Missing values handled.
+SimpleImputer with median strategy is used in the model pipeline.
+
+Check 8: Train-test split is correct.
+test_size=0.2, random_state=42, stratify=y.
+
+Check 9: Required models match specification.
+Decision Tree and Gradient Boosting hyperparameters match the assessment requirement.
+
+Check 10: Outputs are created.
+The reviewer confirms all expected CSV, PNG, MD, JSON, and PKL outputs exist.
+
+Reproducibility:
+A project is reproducible when another person can run it and get the same outputs. The README provides commands, and random_state=42 improves reproducibility.
+
+Maintainability:
+The code is separated into modules. Shared logic is in utils.py, which avoids duplication.
+
+Readability:
+Beginner-friendly code should have:
+- Clear function names.
+- Simple control flow.
+- Constants for paths.
+- Minimal but useful comments.
+- No unnecessary abstraction.
+
+Potential issues a reviewer might flag:
+- Dataset is synthetic, so results may not generalize to real users.
+- CLV formula is simplified.
+- No cross-validation is used.
+- No hyperparameter tuning is done.
+- Model probabilities are not calibrated.
+- No automated unit tests are included.
+- Frontend is static and reads generated CSV files, so it depends on pipeline outputs existing.
+
+Why these are acceptable for this assessment:
+The project is designed for a 180-minute assessment. It focuses on clear end-to-end delivery, explainable modeling, practical prioritization, and business recommendations.
+
+Possible viva questions for Code Reviewer:
+
+Question: How do you know the project follows the restriction?
+Answer: The code trains scikit-learn Decision Tree and Gradient Boosting models from scratch on dataset.csv. It does not use pre-trained models, external APIs, downloaded models, or AutoML.
+
+Question: How do you prevent data leakage?
+Answer: Customer_ID is excluded from features, and Churned is used only as the target. The test set is separated before evaluation.
+
+Question: Why use a Pipeline?
+Answer: A Pipeline keeps preprocessing and model training together. It ensures the same imputation logic is applied during training and prediction.
+
+Question: Why store model metadata?
+Answer: Metadata records selected model, features, metrics, class distribution, and scoring summary. This improves transparency and reproducibility.
+
+Question: What should be tested?
+Answer: Column mapping, risk-level function, CLV calculation, retention reason logic, output file creation, and model pipeline execution.
+
+Question: What makes the code beginner-friendly?
+Answer: Files are separated by responsibility, functions have clear names, outputs are explicit, and README includes step-by-step run commands.
+
+Question: What would you improve before production?
+Answer: Add unit tests, logging, cross-validation, model monitoring, data validation rules, probability calibration, versioned datasets, and deployment pipeline.
+
+
+Combined viva-level concepts across all roles:
+
+1. Churn prediction is classification.
+The model predicts whether a customer will churn or not.
+
+2. Probability is more useful than label.
+Probability helps rank customers.
+
+3. CLV adds business value.
+It prevents the business from targeting only based on risk.
+
+4. Priority score connects ML and strategy.
+Priority_Score = Churn_Probability x CLV.
+
+5. Feature importance supports explainability.
+It shows which customer behaviors matter most.
+
+6. EDA supports trust.
+Before modeling, EDA shows whether patterns make sense.
+
+7. Metrics must match the problem.
+Accuracy alone is weak for churn. F1-score, recall, and ROC-AUC are more useful.
+
+8. Retention strategy must match churn drivers.
+If inactivity is a driver, use reactivation campaigns.
+If support tickets are a driver, use service recovery.
+
+9. The dashboard supports decision-making.
+It helps stakeholders see high-risk customers, priority segments, churn drivers, and top save targets.
+
+10. The project is end-to-end.
+It moves from dataset to EDA, model, scoring, CLV, prioritization, strategy, README, and frontend dashboard.
+
+
+Final project defense statement:
+This project is valuable because it does not stop at prediction. It translates churn probability into retention action using customer value. The model identifies who is likely to churn, CLV identifies who is valuable, and the priority score identifies who should be saved first. This makes the solution useful for marketing, support, and business leadership at FinFlow.

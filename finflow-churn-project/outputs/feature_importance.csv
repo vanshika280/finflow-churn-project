@@ -1,0 +1,15 @@
+Model,Feature,Importance
+Decision Tree,Last_Login_Days_Ago,0.663640128101351
+Decision Tree,Support_Tickets,0.1933159022025432
+Decision Tree,Avg_Monthly_Transactions,0.14304396969610533
+Decision Tree,Age,5.254596560095689e-16
+Decision Tree,Account_Age_Months,0.0
+Decision Tree,Feature_Usage_Score,0.0
+Decision Tree,Avg_Monthly_Revenue,0.0
+Gradient Boosting,Last_Login_Days_Ago,0.43421151296849575
+Gradient Boosting,Avg_Monthly_Transactions,0.19661767919467857
+Gradient Boosting,Support_Tickets,0.19630412343829445
+Gradient Boosting,Feature_Usage_Score,0.0691077311677415
+Gradient Boosting,Account_Age_Months,0.06362894041230265
+Gradient Boosting,Avg_Monthly_Revenue,0.02981977203161197
+Gradient Boosting,Age,0.010310240786875209

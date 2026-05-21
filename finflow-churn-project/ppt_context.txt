@@ -1,0 +1,285 @@
+FinFlow Churn Prediction and Retention Prioritization
+PPT Context Corpus
+
+Goal:
+Create a 10-slide presentation for a 180-minute assessment project.
+Structure: 2 greeting slides + 8 content slides.
+Style: To the point, business-focused, visual, with pictograph/icon-style images and charts.
+Tone: Clear, confident, practical, suitable for a neobank business audience.
+
+Important visual direction:
+- Use dark, modern fintech theme.
+- Use red for high churn risk or urgent loss.
+- Use amber/yellow for medium risk.
+- Use green/teal for low risk or retained customers.
+- Use pictograph-style images/icons where possible: customer group, warning signal, mobile bank app, support headset, feature usage, model tree, target/priority, retention campaign.
+- Prefer charts already generated in the project where relevant.
+
+Local chart/image references:
+- outputs/charts/class_distribution.png
+- outputs/charts/distribution_last_login_days_ago.png
+- outputs/charts/distribution_avg_monthly_transactions.png
+- outputs/charts/distribution_support_tickets.png
+- outputs/charts/distribution_feature_usage_score.png
+- outputs/charts/feature_importance.png
+- outputs/charts/correlation_heatmap.png
+
+Core project facts:
+- Company: FinFlow, a neobank.
+- User base in business case: 2 million users.
+- Business issue: around 8% customer churn every quarter.
+- Dataset size: 1000 synthetic customer records.
+- Dataset churn distribution: 820 non-churned customers, 180 churned customers.
+- Dataset churn rate: 18%.
+- Target column: Churned, where 0 = retained and 1 = churned.
+- Model restriction: no pre-trained models, no external ML APIs, no AutoML, no downloaded models.
+- Models trained from scratch: Decision Tree Classifier and Gradient Boosting Classifier.
+- Best model selected: Gradient Boosting.
+- Best model metrics: Accuracy 0.8950, Precision 0.7143, Recall 0.6944, F1-score 0.7042, ROC-AUC 0.9443.
+- Decision Tree metrics: Accuracy 0.7850, Precision 0.4493, Recall 0.8611, F1-score 0.5905, ROC-AUC 0.8962.
+- Top churn drivers from Gradient Boosting: Last_Login_Days_Ago, Avg_Monthly_Transactions, Support_Tickets.
+- High-risk customers identified: 160.
+- Medium-risk customers identified: 30.
+- Low-risk customers identified: 810.
+- High-priority customers identified: 32.
+- Medium-priority customers identified: 158.
+- Low-priority customers identified: 810.
+- Top-20 save-list CLV: INR 79,410.05.
+
+Slide 1: Greeting / Title
+Title:
+FinFlow Churn Prediction and Retention Prioritization
+
+Subtitle:
+Identifying at-risk customers and prioritizing high-value retention actions
+
+Talk track:
+Good morning/afternoon. Today we present a machine learning and business prioritization solution for reducing customer churn at FinFlow.
+
+Visual suggestion:
+Use a fintech pictograph: mobile banking app, customer icons, and a red churn warning signal.
+
+Slide 2: Greeting / Agenda
+Title:
+Presentation Flow
+
+Bullets:
+- Business problem
+- Dataset and EDA insights
+- Model training and evaluation
+- Churn probability scoring
+- CLV-based prioritization
+- Top-20 save list
+- Retention strategies
+- Team contribution
+
+Talk track:
+We will move from the business problem to the model, then explain how the model output becomes a practical retention action list.
+
+Visual suggestion:
+Use a simple 8-step roadmap pictograph with icons for data, model, score, CLV, priority, campaign.
+
+Slide 3: Business Problem
+Title:
+FinFlow's Quarterly Churn Challenge
+
+Bullets:
+- FinFlow has 2 million users.
+- Around 8% customers churn every quarter.
+- Churn directly reduces deposits, transactions, card usage, and long-term revenue.
+- Marketing needs early warning and a ranked list of customers to save first.
+
+Key message:
+The objective is not only to predict churn, but to prioritize retention spend on customers who are both likely to churn and valuable.
+
+Visual suggestion:
+Pictograph of 100 customer icons with 8 highlighted in red to represent quarterly churn.
+
+Slide 4: Dataset Overview
+Title:
+Customer Behavior Dataset
+
+Bullets:
+- 1000 synthetic customer records.
+- Target variable: Churned.
+- Class split: 820 retained, 180 churned.
+- Churn rate in dataset: 18%.
+- Customer_ID was excluded from model training.
+
+Features used:
+- Age
+- Account_Age_Months
+- Avg_Monthly_Transactions
+- Last_Login_Days_Ago
+- Support_Tickets
+- Feature_Usage_Score
+- Avg_Monthly_Revenue
+
+Visual suggestion:
+Use outputs/charts/class_distribution.png.
+Add small pictographs for retained customers in teal and churned customers in red.
+
+Slide 5: EDA Insights
+Title:
+What the Data Says About Churn
+
+Bullets:
+- Churned customers were inactive for more days on average.
+- Churned customers had lower monthly transaction activity.
+- Churned customers had more support tickets.
+- Churned customers showed lower feature usage.
+
+Business interpretation:
+- Inactivity means weakening banking habit.
+- Low feature usage means low product stickiness.
+- High support tickets can signal dissatisfaction.
+
+Visual suggestion:
+Use a 2x2 chart panel:
+- outputs/charts/distribution_last_login_days_ago.png
+- outputs/charts/distribution_avg_monthly_transactions.png
+- outputs/charts/distribution_support_tickets.png
+- outputs/charts/distribution_feature_usage_score.png
+
+Slide 6: Modeling Approach
+Title:
+Two Explainable Models Trained From Scratch
+
+Bullets:
+- Decision Tree: interpretable baseline model.
+- Gradient Boosting: stronger model for non-linear churn patterns.
+- Train-test split: 80% train, 20% test.
+- Stratified sampling preserved churn class distribution.
+- Missing numeric values handled with median imputation.
+
+Why these models:
+- Suitable for tabular customer behavior data.
+- Easy to explain using feature importance.
+- No pre-trained models or external APIs used.
+
+Visual suggestion:
+Use pictograph of a decision tree icon beside boosted mini-trees, with a "trained from dataset only" label.
+
+Slide 7: Model Results
+Title:
+Gradient Boosting Was Selected
+
+Metrics table:
+Decision Tree:
+- Accuracy: 0.7850
+- Precision: 0.4493
+- Recall: 0.8611
+- F1-score: 0.5905
+- ROC-AUC: 0.8962
+
+Gradient Boosting:
+- Accuracy: 0.8950
+- Precision: 0.7143
+- Recall: 0.6944
+- F1-score: 0.7042
+- ROC-AUC: 0.9443
+
+Selection logic:
+F1-score and ROC-AUC were prioritized because churn data is usually imbalanced.
+
+Visual suggestion:
+Use a simple bar chart comparing F1-score and ROC-AUC for both models.
+Use outputs/charts/feature_importance.png as a supporting image.
+
+Slide 8: Churn Drivers and Scoring
+Title:
+Key Churn Drivers
+
+Top drivers:
+- Last_Login_Days_Ago
+- Avg_Monthly_Transactions
+- Support_Tickets
+
+Scoring output:
+- Every customer receives Churn_Probability.
+- Risk levels:
+  - Low Risk: probability below 0.35
+  - Medium Risk: 0.35 to 0.65
+  - High Risk: above 0.65
+
+Risk results:
+- High Risk: 160 customers.
+- Medium Risk: 30 customers.
+- Low Risk: 810 customers.
+
+Visual suggestion:
+Use outputs/charts/feature_importance.png.
+Add red/amber/green gauge pictograph for risk levels.
+
+Slide 9: CLV and Retention Prioritization
+Title:
+From Prediction to Action
+
+CLV formula:
+CLV = Avg_Monthly_Revenue x Expected_Months
+
+Expected months formula:
+Expected_Months = max(1, 12 - Last_Login_Days_Ago / 30)
+
+Priority formula:
+Priority_Score = Churn_Probability x CLV
+
+Customer segments:
+- High Priority: high churn probability and top-value CLV.
+- Medium Priority: moderate or high churn probability, but not top-value CLV.
+- Low Priority: lower churn risk.
+
+Output results:
+- High Priority: 32 customers.
+- Medium Priority: 158 customers.
+- Low Priority: 810 customers.
+
+Visual suggestion:
+Use a 2x2 matrix pictograph:
+- X-axis: churn probability.
+- Y-axis: CLV.
+- Upper-right quadrant colored red and labeled "Save First".
+
+Slide 10: Top-20 Save List, Strategy, and Closing
+Title:
+Retention Actions and Expected Business Value
+
+Top-20 insight:
+- Top-20 save-list CLV: INR 79,410.05.
+- Most top-20 customers are high-inactivity customers.
+- These customers should be targeted first because they combine high churn risk with high value.
+
+Retention strategy 1:
+High-value inactive customer reactivation.
+- Personalized in-app and email offers.
+- Cashback on next transaction.
+- Reminders about unused banking features.
+- Track login, transaction, and feature adoption.
+
+Retention strategy 2:
+Service recovery for friction-heavy customers.
+- Priority support callbacks.
+- Faster complaint resolution.
+- Fee waivers where appropriate.
+- Relationship manager outreach for high-value users.
+
+Team contribution:
+- ML Engineer: model training, evaluation, feature importance.
+- Data Analyst: EDA, charts, churn insights.
+- Business Analyst: CLV, prioritization, retention strategy.
+- Presenter: storytelling and demo flow.
+- Code Reviewer: code quality, structure, README cleanup.
+
+Closing line:
+Thank you. FinFlow can now move from reactive churn reporting to proactive, value-based retention action.
+
+Visual suggestion:
+Use pictograph of a target/customer shield or customer save campaign.
+Show a small red-to-green action funnel: High Risk -> High Value -> Save List -> Retention Campaign.
+
+Optional presentation notes:
+- Keep each content slide under 5 bullets.
+- Use one main visual per slide.
+- Avoid showing too much code in the PPT.
+- Mention that the final frontend dashboard visualizes the churn scores, CLV prioritization, top-20 save list, and EDA charts.
+- In the demo, open http://localhost:8000/frontend/ and show the KPI cards, risk charts, feature importance, and customer search.

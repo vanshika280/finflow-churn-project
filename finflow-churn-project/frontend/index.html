@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FinFlow Churn Dashboard</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">FinFlow Retention Intelligence</p>
+        <h1>Churn Prediction & Priority Dashboard</h1>
+      </div>
+      <nav class="header-actions" aria-label="Dashboard sections">
+        <a href="#overview">Overview</a>
+        <a href="#drivers">Drivers</a>
+        <a href="#save-list">Save List</a>
+        <a href="#eda">EDA Charts</a>
+      </nav>
+    </header>
+
+    <main>
+      <section id="overview" class="dashboard-section">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Executive View</p>
+            <h2>Customers to protect first</h2>
+          </div>
+          <div class="model-pill" id="modelPill">Loading model results...</div>
+        </div>
+
+        <div class="metric-grid">
+          <article class="metric-card">
+            <span>Total Customers</span>
+            <strong id="totalCustomers">-</strong>
+            <small>Scored by the selected model</small>
+          </article>
+          <article class="metric-card accent-danger">
+            <span>High Risk</span>
+            <strong id="highRiskCustomers">-</strong>
+            <small>Churn probability above 65%</small>
+          </article>
+          <article class="metric-card accent-teal">
+            <span>High Priority</span>
+            <strong id="highPriorityCustomers">-</strong>
+            <small>High risk and top-value CLV</small>
+          </article>
+          <article class="metric-card accent-gold">
+            <span>Top-20 CLV</span>
+            <strong id="top20Clv">-</strong>
+            <small>Value represented by urgent save list</small>
+          </article>
+        </div>
+
+        <div class="chart-grid two-col">
+          <article class="panel">
+            <div class="panel-title">
+              <h3>Risk Distribution</h3>
+              <p>Low, medium, and high churn-risk customers.</p>
+            </div>
+            <canvas id="riskDonut" height="300"></canvas>
+          </article>
+
+          <article class="panel">
+            <div class="panel-title">
+              <h3>Priority Segments</h3>
+              <p>Retention segments based on churn probability and CLV.</p>
+            </div>
+            <canvas id="priorityBar" height="300"></canvas>
+          </article>
+        </div>
+
+        <div class="chart-grid two-col">
+          <article class="panel">
+            <div class="panel-title">
+              <h3>Churn Probability Spread</h3>
+              <p>Distribution of model churn scores across all customers.</p>
+            </div>
+            <canvas id="probabilityHistogram" height="300"></canvas>
+          </article>
+
+          <article class="panel">
+            <div class="panel-title">
+              <h3>CLV vs Churn Risk</h3>
+              <p>Upper-right customers are expensive to lose.</p>
+            </div>
+            <canvas id="clvScatter" height="300"></canvas>
+          </article>
+        </div>
+      </section>
+
+      <section id="drivers" class="dashboard-section">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Model Explainability</p>
+            <h2>What is driving churn?</h2>
+          </div>
+        </div>
+
+        <div class="chart-grid two-col">
+          <article class="panel">
+            <div class="panel-title">
+              <h3>Gradient Boosting Feature Importance</h3>
+              <p>Top behavioral signals used by the strongest model.</p>
+            </div>
+            <canvas id="featureImportance" height="340"></canvas>
+          </article>
+
+          <article class="panel insight-panel">
+            <div class="panel-title">
+              <h3>Business Readout</h3>
+              <p>Summary generated from the model and top-save patterns.</p>
+            </div>
+            <div class="insight-list">
+              <div>
+                <strong>Primary churn warning</strong>
+                <span>Longer inactivity is the strongest risk signal.</span>
+              </div>
+              <div>
+                <strong>Revenue lens</strong>
+                <span>CLV keeps the campaign focused on value, not only probability.</span>
+              </div>
+              <div>
+                <strong>Action path</strong>
+                <span>Start with reactivation offers, then support recovery for friction-heavy users.</span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="save-list" class="dashboard-section">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Retention Operations</p>
+            <h2>Top customers to save</h2>
+          </div>
+        </div>
+
+        <div class="chart-grid two-col">
+          <article class="panel">
+            <div class="panel-title">
+              <h3>Top-20 Priority Scores</h3>
+              <p>Highest urgency customers by probability x CLV.</p>
+            </div>
+            <canvas id="topCustomers" height="340"></canvas>
+          </article>
+
+          <article class="panel">
+            <div class="panel-title">
+              <h3>Retention Reasons</h3>
+              <p>Most common intervention trigger in the save list.</p>
+            </div>
+            <canvas id="reasonBar" height="340"></canvas>
+          </article>
+        </div>
+
+        <article class="panel table-panel">
+          <div class="table-control-band">
+            <div>
+              <p class="eyebrow">Top-20 List</p>
+              <h3>Customer lookup</h3>
+            </div>
+            <div class="table-tools">
+              <input id="customerSearch" type="search" placeholder="Search any customer ID" />
+              <a class="download-link" href="../outputs/top_20_save_list.csv">Top-20 CSV</a>
+            </div>
+          </div>
+          <div class="panel-title">
+            <h3>Urgent Save List</h3>
+            <p id="tableStatus">Top 20 customers for immediate campaign outreach.</p>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Customer</th>
+                  <th>Churn Probability</th>
+                  <th>CLV</th>
+                  <th>Priority Score</th>
+                  <th>Segment</th>
+                  <th>Reason</th>
+                </tr>
+              </thead>
+              <tbody id="top20Table"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <section id="eda" class="dashboard-section">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">EDA Gallery</p>
+            <h2>Data patterns behind the model</h2>
+          </div>
+          <a class="download-link" href="../outputs/prioritized_customer_segments.csv">Segments CSV</a>
+        </div>
+
+        <div class="eda-grid">
+          <figure>
+            <img src="../outputs/charts/class_distribution.png" alt="Class distribution chart" />
+            <figcaption>Class Distribution</figcaption>
+          </figure>
+          <figure>
+            <img src="../outputs/charts/distribution_last_login_days_ago.png" alt="Last login distribution" />
+            <figcaption>Last Login Days Ago</figcaption>
+          </figure>
+          <figure>
+            <img src="../outputs/charts/distribution_avg_monthly_transactions.png" alt="Monthly transactions distribution" />
+            <figcaption>Monthly Transactions</figcaption>
+          </figure>
+          <figure>
+            <img src="../outputs/charts/distribution_support_tickets.png" alt="Support tickets distribution" />
+            <figcaption>Support Tickets</figcaption>
+          </figure>
+          <figure>
+            <img src="../outputs/charts/distribution_feature_usage_score.png" alt="Feature usage distribution" />
+            <figcaption>Feature Usage Score</figcaption>
+          </figure>
+          <figure>
+            <img src="../outputs/charts/feature_importance.png" alt="Feature importance chart" />
+            <figcaption>Feature Importance</figcaption>
+          </figure>
+        </div>
+      </section>
+    </main>
+
+    <div class="toast" id="statusToast">Loading dashboard data...</div>
+    <script src="app.js"></script>
+  </body>
+</html>
